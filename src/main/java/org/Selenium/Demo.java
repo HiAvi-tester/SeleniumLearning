@@ -19,7 +19,7 @@ public class Demo {
         driver.manage().window().maximize();
         Thread.sleep(1000);
         driver.close();
-        System.out.println(driver.getTitle());
+
 
     }
 }
