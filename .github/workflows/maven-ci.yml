@@ -16,6 +16,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  # Published report; its history/ folder feeds the Allure Trend graph on the next run.
+  PAGES_URL: https://hiavi-tester.github.io/java-selenium-restassured-hybrid
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -32,6 +36,15 @@ jobs:
       # Chrome is preinstalled on GitHub-hosted Ubuntu runners; Selenium Manager fetches the matching driver.
       - name: Run tests (headless Chrome)
         run: mvn -B test -Dheadless=true -Dbrowser=chrome -Dsuite=${{ inputs.suite || 'testng.xml' }}
+
+      # Best effort: missing files (first deploy, Pages not enabled yet) are simply skipped.
+      - name: Restore Allure history from the published report
+        if: ${{ !cancelled() }}
+        run: |
+          mkdir -p target/allure-results/history
+          for f in history.json history-trend.json duration-trend.json categories-trend.json retry-trend.json; do
+            curl -sfL "$PAGES_URL/history/$f" -o "target/allure-results/history/$f" || echo "no previous $f"
+          done
 
       - name: Generate Allure report
         if: ${{ !cancelled() }}
@@ -50,3 +63,27 @@ jobs:
           name: surefire-reports
           path: target/surefire-reports
           retention-days: 7
+
+      # Uploaded even when tests fail, so the live report shows the failures.
+      - name: Upload report for GitHub Pages
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: target/site/allure-maven-plugin
+
+  deploy:
+    needs: test
+    # Runs after a passing or failing test job, but not when cancelled or on PRs.
+    if: ${{ !cancelled() && needs.test.result != 'skipped' && github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
