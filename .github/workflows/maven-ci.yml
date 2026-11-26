@@ -1,0 +1,52 @@
+name: Maven CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: 'TestNG suite file'
+        default: 'testng.xml'
+        type: choice
+        options: [testng.xml, testng-smoke.xml]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      # Chrome is preinstalled on GitHub-hosted Ubuntu runners; Selenium Manager fetches the matching driver.
+      - name: Run tests (headless Chrome)
+        run: mvn -B test -Dheadless=true -Dbrowser=chrome -Dsuite=${{ inputs.suite || 'testng.xml' }}
+
+      - name: Generate Allure report
+        if: ${{ !cancelled() }}
+        run: mvn -B -q allure:report
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: allure-report
+          path: target/site/allure-maven-plugin
+          retention-days: 14
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: surefire-reports
+          path: target/surefire-reports
+          retention-days: 7
