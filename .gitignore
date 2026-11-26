@@ -36,3 +36,10 @@ build/
 
 ### Mac OS ###
 .DS_Store
+### Framework outputs ###
+.idea/
+allure-results/
+allure-report/
+screenshots/
+test-output/
+*.log
