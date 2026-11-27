@@ -179,5 +179,4 @@ Before generating the report, the workflow pulls the previous report's `history/
 
 **Avinash Kumar Verma – Senior QA Automation Engineer, 9 years**
 
-- LinkedIn: `<LinkedIn URL>`
-- Upwork: `<Upwork profile URL>`
+- LinkedIn: [linkedin.com/in/iamavinashkumarverma](https://www.linkedin.com/in/iamavinashkumarverma)
