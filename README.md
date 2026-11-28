@@ -16,8 +16,8 @@ Published by CI on every push to `master`, including failed runs, so you can see
   TODO: record docs/demo.gif (20–30 s) with ScreenToGif:
   terminal running `mvn test -Dheadless=true` → Allure dashboard (overview, a failed test with its screenshot and steps).
   Keep it under ~5 MB so GitHub renders it inline.
+  Then move this line out of the comment: ![Demo](docs/demo.gif)
 -->
-![Demo](docs/demo.gif)
 
 ---
 
